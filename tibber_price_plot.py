@@ -41,8 +41,8 @@ class TibberPricePlot(hass.Hass):
         # Turn string index to datetime objects
         self.price_data.rename(pd.to_datetime, inplace=True)
 
-        # Publish the price data as this app's state
-        self.set_app_state(self.price_data)
+        # Publish the price data as a global variable
+        self.global_vars["electricity_prices"] = self.price_data.copy()
 
     async def make_plot(self, kwargs):
         """Make the plot and store it in the configured location."""
