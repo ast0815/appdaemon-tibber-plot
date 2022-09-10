@@ -55,7 +55,6 @@ class TibberPricePlot(hass.Hass):
         dummy = df[df["time"] == 23].copy()
         dummy["time"] = 24
         df = pd.concat([df, dummy], ignore_index=True)
-        self.log(df)
 
         # Plot the plot
         fig, ax = plt.subplots()
