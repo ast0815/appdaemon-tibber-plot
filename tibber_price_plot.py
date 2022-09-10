@@ -49,7 +49,7 @@ class TibberPricePlot(hass.Hass):
         df["date"] = df["datetime"].dt.date
         df["time"] = df["datetime"].dt.hour
         # Insert dummy values to plot the last hour
-        dummy = df[df["time"] == 23]
+        dummy = df[df["time"] == 23].copy()
         dummy["time"] = 24
         df = pd.concat([df, dummy], ignore_index=True)
         self.log(df)
