@@ -8,6 +8,12 @@ import seaborn as sns
 """
 App that creates a plot of the current and future electricity prices
 
+Arguments
+---------
+
+tibber_api_token : The Tibber API token to get the electricity prices
+quantile_markers : Dictionary of `quantile : kwargs` to show in the plot as axhline
+
 """
 
 
@@ -15,6 +21,7 @@ class TibberPricePlot(hass.Hass):
     async def initialize(self):
         # Create tibber API object
         self.tibber_connection = tibber.Tibber(self.args["tibber_api_token"])
+        self.quantile_markers = self.args.get("quantile_markers", {})
         await self.tibber_connection.update_info()
         self.home = self.tibber_connection.get_homes()[0]
         await self.home.update_info()
@@ -63,6 +70,11 @@ class TibberPricePlot(hass.Hass):
         now = datetime.datetime.now()
         now_time = now.hour + now.minute / 60.
         ax.axvline(now_time, color="black", linestyle="dotted")
+
+        # Add quantiles
+        for quantile, args in self.quantile_markers.items():
+            value = data.quantile(quantile)
+            ax.axhline(value, **args)
 
         # Make things a bit prettier
         ax.set_xlim(left=0, right=24.01)
