@@ -93,7 +93,7 @@ class TibberPricePlot(hass.Hass):
             dummy["time"] += 24
             dummy["date"] += pd.Timedelta(days=-1)
             df = pd.concat([df, dummy], ignore_index=True)
-            sns.lineplot(df, ax=ax2, x="time", y="value", style="date", hue="date", legend=False, **args)
+            sns.lineplot(df, ax=ax2, x="time", y="value", **args)
 
         # Make things a bit prettier
         ax.set_xlim(left=0, right=24.01)
