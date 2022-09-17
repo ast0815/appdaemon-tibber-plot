@@ -80,7 +80,7 @@ class TibberPricePlot(hass.Hass):
 
         # Add extra plots
         for varname, args in self.extra_plots.items():
-            series = self.global_vars.get("varname", None)
+            series = self.global_vars.get(varname, None)
             if series is None:
                 self.log(f"Could not load {varname} from global variables.")
                 continue
