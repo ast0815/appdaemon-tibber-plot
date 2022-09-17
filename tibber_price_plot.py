@@ -80,6 +80,7 @@ class TibberPricePlot(hass.Hass):
 
         # Add extra plots
         for varname, args in self.extra_plots.items():
+            ax2 = ax.twinx()
             series = self.global_vars.get(varname, None)
             if series is None:
                 self.log(f"Could not load {varname} from global variables.")
@@ -87,7 +88,12 @@ class TibberPricePlot(hass.Hass):
             df = pd.DataFrame({"datetime": series.index, "value": series.array})
             df["date"] = df["datetime"].dt.date
             df["time"] = df["datetime"].dt.hour
-            sns.lineplot(df, x="time", y="value", style="date", hue="date")
+            # Insert dummy values to plot the last hour
+            dummy = df[df["time"] == 0].copy()
+            dummy["time"] += 24
+            dummy["date"] += pd.Timedelta(days=-1)
+            df = pd.concat([df, dummy], ignore_index=True)
+            sns.lineplot(df, ax=ax2, x="time", y="value", style="date", hue="date", legend=False, **args)
 
         # Make things a bit prettier
         ax.set_xlim(left=0, right=24.01)
