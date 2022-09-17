@@ -22,8 +22,8 @@ class TibberPricePlot(hass.Hass):
     async def initialize(self):
         # Create tibber API object
         self.tibber_connection = tibber.Tibber(self.args["tibber_api_token"])
-        self.quantile_markers = seylf.args.get("quantile_markers", {})
-        self.extra_plots = seylf.args.get("extra_plots", {})
+        self.quantile_markers = self.args.get("quantile_markers", {})
+        self.extra_plots = self.args.get("extra_plots", {})
         await self.tibber_connection.update_info()
         self.home = self.tibber_connection.get_homes()[0]
         await self.home.update_info()
