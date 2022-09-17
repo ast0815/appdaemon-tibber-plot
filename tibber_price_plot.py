@@ -13,6 +13,7 @@ Arguments
 
 tibber_api_token : The Tibber API token to get the electricity prices
 quantile_markers : Dictionary of `quantile : kwargs` to show in the plot as axhline
+extra_plots : Dictionary of `variable_name : kwargs` of time series in glibal vars to show
 
 """
 
@@ -21,7 +22,8 @@ class TibberPricePlot(hass.Hass):
     async def initialize(self):
         # Create tibber API object
         self.tibber_connection = tibber.Tibber(self.args["tibber_api_token"])
-        self.quantile_markers = self.args.get("quantile_markers", {})
+        self.quantile_markers = seylf.args.get("quantile_markers", {})
+        self.extra_plots = seylf.args.get("extra_plots", {})
         await self.tibber_connection.update_info()
         self.home = self.tibber_connection.get_homes()[0]
         await self.home.update_info()
@@ -75,6 +77,17 @@ class TibberPricePlot(hass.Hass):
         for quantile, args in self.quantile_markers.items():
             value = data.quantile(quantile)
             ax.axhline(value, **args)
+
+        # Add extra plots
+        for varname, args in self.extra_plots.items():
+            series = self.global_vars.get("varname", None)
+            if series is None:
+                self.log(f"Could not load {varname} from global variables.")
+                continue
+            df = pd.DataFrame({"datetime": series.index, "value": series.array})
+            df["date"] = df["datetime"].dt.date
+            df["time"] = df["datetime"].dt.hour
+            sns.lineplot(df, x="time", y="value", style="date", hue="date")
 
         # Make things a bit prettier
         ax.set_xlim(left=0, right=24.01)
