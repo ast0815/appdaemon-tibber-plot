@@ -58,6 +58,11 @@ class TibberPricePlot(hass.Hass):
     async def make_plot(self, kwargs):
         """Make the plot and store it in the configured location."""
         data = self.price_data
+        if len(data) == 0:
+            # No data?
+            self.log("No price data available.")
+            return
+
         # Convert the time series to a data frame, because that magically makes the plot work
         df = pd.DataFrame({"datetime": data.index, "price": data.array})
         df["date"] = df["datetime"].dt.date
