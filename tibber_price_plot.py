@@ -32,6 +32,7 @@ class TibberPricePlot(hass.Hass):
 
         # Update the price info now and once every hour
         start = datetime.time(minute=1)
+        self.price_data = None
         await self.update_price_data({})
         self.run_hourly(self.update_price_data, start)
 
@@ -48,7 +49,8 @@ class TibberPricePlot(hass.Hass):
         await self.home.update_price_info()
         # Get the dict of prices; keys are start timeas as strings
         price_dict = self.home.price_total
-        self.price_data = pd.Series(price_dict)
+        if len(price_dict) > 0 or self.price_data is None:
+            self.price_data = pd.Series(price_dict)
         # Turn string index to datetime objects
         self.price_data.rename(pd.to_datetime, inplace=True)
 
@@ -74,10 +76,12 @@ class TibberPricePlot(hass.Hass):
 
         # Plot the plot
         fig, ax = plt.subplots()
-        sns.lineplot(df, x="time", y="price", style="date", hue="date", drawstyle="steps-post")
+        sns.lineplot(
+            df, x="time", y="price", style="date", hue="date", drawstyle="steps-post"
+        )
         # Add a vertical line at now
         now = datetime.datetime.now()
-        now_time = now.hour + now.minute / 60.
+        now_time = now.hour + now.minute / 60.0
         ax.axvline(now_time, color="black", linestyle="dotted")
 
         # Add quantiles
@@ -107,7 +111,7 @@ class TibberPricePlot(hass.Hass):
         # Make things a bit prettier
         ax.set_xlim(left=0, right=24.01)
         tick_vals = list(range(0, 25, 3))
-        tick_labels = [ "%02d:00"%t for t in range(0, 25, 3) ]
+        tick_labels = ["%02d:00" % t for t in range(0, 25, 3)]
         ax.set_xticks(tick_vals, tick_labels)
         ax.set_ylabel("electricity price / [€/kWh]")
         fig.tight_layout()
