@@ -67,6 +67,7 @@ class TibberPricePlot(hass.Hass):
 
         # Convert the time series to a data frame, because that magically makes the plot work
         df = pd.DataFrame({"datetime": data.index, "price": data.array})
+        tz = df["datetime"].iloc[-1].tz
         df["date"] = [dt.date() for dt in df["datetime"]]
         df["time"] = [dt.hour for dt in df["datetime"]]
         # Insert dummy values to plot the last hour
@@ -98,6 +99,7 @@ class TibberPricePlot(hass.Hass):
                     self.log(f"Could not load {varname} from global variables.")
                     continue
                 df = pd.DataFrame({"datetime": series.index, "value": series.array})
+                df["datetime"] = df["datetime"].dt.astimezone(tz)
                 df["date"] = df["datetime"].dt.date
                 df["time"] = df["datetime"].dt.hour + (df["datetime"].dt.minute / 60)
                 # Insert dummy values to plot the last hour
