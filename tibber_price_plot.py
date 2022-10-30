@@ -99,7 +99,7 @@ class TibberPricePlot(hass.Hass):
                     self.log(f"Could not load {varname} from global variables.")
                     continue
                 df = pd.DataFrame({"datetime": series.index, "value": series.array})
-                df["datetime"] = df["datetime"].dt.astimezone(tz)
+                df["datetime"] = df["datetime"].dt.tzconvert(tz)
                 df["date"] = df["datetime"].dt.date
                 df["time"] = df["datetime"].dt.hour + (df["datetime"].dt.minute / 60)
                 # Insert dummy values to plot the last hour
