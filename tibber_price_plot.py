@@ -22,7 +22,7 @@ extra_ylabel : Label for the y axis of the extra plots
 class TibberPricePlot(hass.Hass):
     async def initialize(self):
         # Create tibber API object
-        self.tibber_connection = tibber.Tibber(self.args["tibber_api_token"])
+        self.tibber_connection = tibber.Tibber(self.args["tibber_api_token"], user_agent="myAppDaemonApp")
         self.quantile_markers = self.args.get("quantile_markers", {})
         self.extra_plots = self.args.get("extra_plots", {})
         self.extra_ylabel = self.args.get("extra_ylabel", "")
