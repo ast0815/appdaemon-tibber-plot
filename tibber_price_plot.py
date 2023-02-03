@@ -116,6 +116,7 @@ class TibberPricePlot(hass.Hass):
         tick_labels = ["%02d:00" % t for t in range(0, 25, 3)]
         ax.set_xticks(tick_vals, tick_labels)
         ax.set_ylabel("electricity price / [€/kWh]")
+        ax.set_ylim(bottom=0.)
         fig.tight_layout()
         # Save to HA's static webserver
         fig.savefig(self.config_dir + "/../www/plots/prices.png")
