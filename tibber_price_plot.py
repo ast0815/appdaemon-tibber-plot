@@ -15,6 +15,7 @@ tibber_api_token : The Tibber API token to get the electricity prices
 quantile_markers : Dictionary of `quantile : kwargs` to show in the plot as axhline
 extra_plots : Dictionary of `variable_name : kwargs` of time series in glibal vars to show
 extra_ylabel : Label for the y axis of the extra plots
+save_plot : path and filename of the ploit to be saved
 
 """
 
@@ -26,6 +27,7 @@ class TibberPricePlot(hass.Hass):
         self.quantile_markers = self.args.get("quantile_markers", {})
         self.extra_plots = self.args.get("extra_plots", {})
         self.extra_ylabel = self.args.get("extra_ylabel", "")
+        self.save_plot = self.args.get("save_plot", "/homeassistant/www/plots/prices.png")
         await self.tibber_connection.update_info()
         self.home = self.tibber_connection.get_homes()[0]
         await self.home.update_info()
@@ -119,5 +121,5 @@ class TibberPricePlot(hass.Hass):
         ax.set_ylim(bottom=0.)
         fig.tight_layout()
         # Save to HA's static webserver
-        fig.savefig(self.config_dir + "/../www/plots/prices.png")
+        fig.savefig(self.save_plot)
         plt.close()
