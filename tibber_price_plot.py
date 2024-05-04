@@ -2,6 +2,7 @@ import hassapi as hass
 import datetime
 import tibber
 import pandas as pd
+import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
 
@@ -13,6 +14,8 @@ Arguments
 
 tibber_api_token : The Tibber API token to get the electricity prices
 quantile_markers : Dictionary of `quantile : kwargs` to show in the plot as axhline
+price_level_helper : Name of input number entity to store current price level compared to the next 12 hours
+low_price_wait_helper : Namer of input number entity to store how many hours to wait for the next low-price period within the next 12 hours
 extra_plots : Dictionary of `variable_name : kwargs` of time series in glibal vars to show
 extra_ylabel : Label for the y axis of the extra plots
 save_plot : path and filename of the ploit to be saved
@@ -27,6 +30,8 @@ class TibberPricePlot(hass.Hass):
         self.quantile_markers = self.args.get("quantile_markers", {})
         self.extra_plots = self.args.get("extra_plots", {})
         self.extra_ylabel = self.args.get("extra_ylabel", "")
+        self.price_level_helper = self.args.get("price_level_helper", "")
+        self.low_price_wait_helper = self.args.get("low_price_wait_helper", "")
         self.save_plot = self.args.get("save_plot", "/homeassistant/www/plots/prices.png")
         await self.tibber_connection.update_info()
         self.home = self.tibber_connection.get_homes()[0]
@@ -83,7 +88,7 @@ class TibberPricePlot(hass.Hass):
             df, x="time", y="price", style="date", hue="date", drawstyle="steps-post"
         )
         # Add a vertical line at now
-        now = datetime.datetime.now()
+        now = datetime.datetime.now(tz=data.index[0].tz)
         now_time = now.hour + now.minute / 60.0
         ax.axvline(now_time, color="black", linestyle="dotted")
 
@@ -91,6 +96,24 @@ class TibberPricePlot(hass.Hass):
         for quantile, args in self.quantile_markers.items():
             value = data.quantile(quantile)
             ax.axhline(value, **args)
+    
+        # Get current price as well as min max over the next 12 hours to calculate price level
+        now_hour = now.replace(second=0, minute=0, microsecond=0)
+        data12h = data[now_hour : now + datetime.timedelta(hours=12)]
+        now_price = data12h.asof(now)
+        min12h = data12h.min()
+        max12h = data12h.max()
+        price_level = int(100. * (now_price - min12h) / (max12h - min12h))
+        if self.price_level_helper:
+            self.set_value(self.price_level_helper, price_level)
+
+        # Get next low-price time
+        kernel = np.array([1. ,1.])
+        average = np.convolve(data12h.to_numpy(), kernel, mode="valid")
+        low_time = data12h.index[np.argmin(average)]
+        wait_hours = (low_time - now).total_seconds() / 3600.
+        if self.low_price_wait_helper:
+            self.set_value(self.low_price_wait_helper, f"{wait_hours:.1f}")
 
         # Add extra plots
         if len(self.extra_plots):
