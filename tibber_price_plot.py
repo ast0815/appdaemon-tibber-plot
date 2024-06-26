@@ -112,6 +112,8 @@ class TibberPricePlot(hass.Hass):
         average = np.convolve(data12h.to_numpy(), kernel, mode="valid")
         low_time = data12h.index[np.argmin(average)]
         wait_hours = (low_time - now).total_seconds() / 3600.
+        if wait_hours < 0:
+            wait_hours = 0
         if self.low_price_wait_helper:
             self.set_value(self.low_price_wait_helper, f"{wait_hours:.1f}")
 
