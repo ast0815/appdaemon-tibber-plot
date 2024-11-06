@@ -51,7 +51,7 @@ class TibberPricePlot(hass.Hass):
         await self.tibber_connection.close_connection()
 
     async def update_price_data(self, kwargs):
-        """Update the hourly electricity prices of today and possibly tomorrow."""
+        """Update the hourly electricity prices of previous days, today and possibly tomorrow."""
 
         await self.home.update_price_info()
         # Get the dict of prices; keys are start timeas as strings
@@ -82,13 +82,16 @@ class TibberPricePlot(hass.Hass):
         dummy["time"] = 24
         df = pd.concat([df, dummy], ignore_index=True)
 
+        # Filter out prvious days
+        now = datetime.datetime.now(tz=data.index[0].tz)
+        df = df[df["datetime"] >= now.replace(hour=0, minute=0, second=0, microsecond=0)]
+
         # Plot the plot
         fig, ax = plt.subplots()
         sns.lineplot(
             df, x="time", y="price", style="date", hue="date", drawstyle="steps-post"
         )
         # Add a vertical line at now
-        now = datetime.datetime.now(tz=data.index[0].tz)
         now_time = now.hour + now.minute / 60.0
         ax.axvline(now_time, color="black", linestyle="dotted")
 
