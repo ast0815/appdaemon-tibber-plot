@@ -15,6 +15,7 @@ Arguments
 tibber_api_token : The Tibber API token to get the electricity prices
 quantile_markers : Dictionary of `quantile : kwargs` to show in the plot as axhline
 price_level_helper : Name of input number entity to store current price level compared to the next 12 hours
+min_max_price : If the max price of over the next twelve hours is below this value, assume this value for price level calculation.
 low_price_wait_helper : Namer of input number entity to store how many hours to wait for the next low-price period within the next 12 hours
 extra_plots : Dictionary of `variable_name : kwargs` of time series in glibal vars to show
 extra_ylabel : Label for the y axis of the extra plots
@@ -31,6 +32,7 @@ class TibberPricePlot(hass.Hass):
         self.extra_plots = self.args.get("extra_plots", {})
         self.extra_ylabel = self.args.get("extra_ylabel", "")
         self.price_level_helper = self.args.get("price_level_helper", "")
+        self.min_max_price = float(self.args.get("min_max_price", 0.0))
         self.low_price_wait_helper = self.args.get("low_price_wait_helper", "")
         self.save_plot = self.args.get("save_plot", "/homeassistant/www/plots/prices.png")
         await self.tibber_connection.update_info()
@@ -105,7 +107,7 @@ class TibberPricePlot(hass.Hass):
         data12h = data[now_hour : now + datetime.timedelta(hours=12)]
         now_price = data12h.asof(now)
         min12h = data12h.min()
-        max12h = data12h.max()
+        max12h = max(data12h.max(), self.min_max_price)
         price_level = int(100. * (now_price - min12h) / (max12h - min12h))
         if self.price_level_helper:
             self.set_value(self.price_level_helper, price_level)
