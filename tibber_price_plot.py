@@ -88,10 +88,8 @@ class TibberPricePlot(hass.Hass):
         df["time"] = [dt.hour + (dt.minute / 60) for dt in df["datetime"]]
         # Insert dummy values to plot the last hour
         dummy = df.groupby('date').last().reset_index()
-        self.log(dummy)
         dummy["time"] = 24
         df = pd.concat([df, dummy], ignore_index=True)
-        self.log(df)
         
         # Filter out prvious days
         now = datetime.datetime.now(tz=data.index[0].tz)
