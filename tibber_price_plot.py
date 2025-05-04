@@ -6,6 +6,8 @@ import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
 
+from aiohttp.client_exceptions import ClientConnectorError
+
 """
 App that creates a plot of the current and future electricity prices
 
@@ -55,7 +57,12 @@ class TibberPricePlot(hass.Hass):
     async def update_price_data(self, kwargs):
         """Update the hourly electricity prices of previous days, today and possibly tomorrow."""
 
-        await self.home.update_price_info()
+        try:
+            await self.home.update_price_info()
+        except ClientConnectorError:
+            self.log("Could not connect to Tibber API.")
+            return
+            
         # Get the dict of prices; keys are start timeas as strings
         price_dict = self.home.price_total
         if len(price_dict) > 0 or self.price_data is None:
