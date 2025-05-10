@@ -37,10 +37,16 @@ class TibberPricePlot(hass.Hass):
         self.min_max_price = float(self.args.get("min_max_price", 0.0))
         self.low_price_wait_helper = self.args.get("low_price_wait_helper", "")
         self.save_plot = self.args.get("save_plot", "/homeassistant/www/plots/prices.png")
-        await self.tibber_connection.update_info()
-        self.home = self.tibber_connection.get_homes()[0]
-        await self.home.update_info()
-
+        
+        connected = False
+        while not connected:
+            try:
+                await self.tibber_connection.update_info()
+                self.home = self.tibber_connection.get_homes()[0]
+                await self.home.update_info()
+                connected = True
+            except ClientConnectorError:
+                await self.sleep(600)
         # Update the price info now and once every hour
         start = datetime.time(minute=1)
         self.price_data = None
