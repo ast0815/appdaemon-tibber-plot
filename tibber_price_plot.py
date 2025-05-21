@@ -45,7 +45,8 @@ class TibberPricePlot(hass.Hass):
                 self.home = self.tibber_connection.get_homes()[0]
                 await self.home.update_info()
                 connected = True
-            except ClientConnectorError:
+            except ClientConnectorError as e:
+                self.log("Could not connect to Tibber API. Trying again later...")
                 await self.sleep(600)
         # Update the price info now and once every hour
         start = datetime.time(minute=1)
@@ -65,8 +66,9 @@ class TibberPricePlot(hass.Hass):
 
         try:
             await self.home.update_price_info()
-        except ClientConnectorError:
+        except (ClientConnectorError, FatalHttpExceptionError) as e:
             self.log("Could not connect to Tibber API.")
+            self.log(e)
             return
             
         # Get the dict of prices; keys are start timeas as strings
