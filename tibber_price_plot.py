@@ -1,6 +1,7 @@
 import hassapi as hass
 import datetime
 import tibber
+from tibber.exceptions import FatalHttpExceptionError
 import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt
@@ -48,6 +49,7 @@ class TibberPricePlot(hass.Hass):
             except ClientConnectorError as e:
                 self.log("Could not connect to Tibber API. Trying again later...")
                 await self.sleep(600)
+        self.log("Connected to Tibber API.")
         # Update the price info now and once every hour
         start = datetime.time(minute=1)
         self.price_data = None
@@ -56,16 +58,17 @@ class TibberPricePlot(hass.Hass):
 
         # Make a new plot every 5 minutes
         every = 5 * 60
-        self.run_every(self.make_plot, "now", every)
+        start = await self.get_now() + datetime.timedelta(seconds=2)
+        await self.run_every(self.make_plot, start, every)
 
     async def terminate(self):
         await self.tibber_connection.close_connection()
 
     async def update_price_data(self, kwargs):
-        """Update the hourly electricity prices of previous days, today and possibly tomorrow."""
+        """Update the electricity prices of previous days, today and possibly tomorrow."""
 
         try:
-            await self.home.update_price_info()
+            await self.home.update_info_and_price_info()
         except (ClientConnectorError, FatalHttpExceptionError) as e:
             self.log("Could not connect to Tibber API.")
             self.log(e)
