@@ -131,7 +131,7 @@ class TibberPricePlot(hass.Hass):
             self.set_value(self.price_level_helper, price_level)
 
         # Get next low-price time
-        kernel = np.array([1. ,1.])
+        kernel = np.array([1. ,] * 8) # Prices are in 15 minute intervals, average over 8 to get 2 hour wide rolling average
         average = np.convolve(data12h.to_numpy(), kernel, mode="valid")
         low_time = data12h.index[np.argmin(average)]
         wait_hours = (low_time - now).total_seconds() / 3600.
