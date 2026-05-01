@@ -124,9 +124,9 @@ class TibberPricePlot(hass.Hass):
         now_hour = now.replace(second=0, minute=0, microsecond=0)
         data12h = data[now_hour : now + datetime.timedelta(hours=12)]
         now_price = data12h.asof(now)
-        min12h = data12h.min()
+        min12h = max(data12h.min(), 0)
         max12h = max(data12h.max(), self.min_max_price)
-        price_level = int(100. * (now_price - min12h) / (max12h - min12h))
+        price_level = max(int(100. * (now_price - min12h) / (max12h - min12h)), 0)
         if self.price_level_helper:
             self.set_value(self.price_level_helper, price_level)
 
